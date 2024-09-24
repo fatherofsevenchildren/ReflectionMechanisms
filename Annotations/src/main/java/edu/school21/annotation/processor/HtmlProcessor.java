@@ -28,6 +28,7 @@ public class HtmlProcessor extends AbstractProcessor {
     private static final String INPUT_TEMPLATE =
             "<input type=\"%s\" name=\"%s\" placeholder=\"%s\">";
 
+
     @Override
     public boolean process(final Set<? extends TypeElement> annotations,
                            final RoundEnvironment roundEnv) {
