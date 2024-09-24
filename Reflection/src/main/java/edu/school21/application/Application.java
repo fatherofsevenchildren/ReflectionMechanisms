@@ -1,24 +1,23 @@
 package edu.school21.application;
 
-import org.reflections.Reflections;
-import org.reflections.scanners.SubTypesScanner;
-
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.InputMismatchException;
 import java.util.Scanner;
+import org.reflections.Reflections;
+import org.reflections.scanners.SubTypesScanner;
 
 
 public class Application {
+
     static final String CLASS_PATH = "edu.school21.classes";
     static final String DELIMITER = "-----------------\n";
 
-    Class<?> clazz;
-    Object object;
-    Scanner scanner = new Scanner(System.in);
-    Field[] fields;
-    Method[] methods;
+    private Object object;
+    private final Scanner scanner = new Scanner(System.in);
+    private Field[] fields;
+    private Method[] methods;
 
     void start() {
         showClasses();
@@ -28,8 +27,8 @@ public class Application {
             setFields();
             fieldChanging();
             executeMethod();
-        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | NoSuchMethodException |
-                 InvocationTargetException e) {
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException
+                 | NoSuchMethodException | InvocationTargetException e) {
             System.out.println("error when you try:" + e.getMessage());
         } catch (IllegalArgumentException e) {
             System.out.println(e.getMessage());
@@ -49,7 +48,7 @@ public class Application {
         System.out.println("Method returned:\n" + method.invoke(object, params).toString());
     }
 
-    private Method findMethod(String desiredMethod) {
+    private Method findMethod(final String desiredMethod) {
         for (Method method : methods) {
             String[] fullNameMethod = method.toString().split("\\.");
             if (fullNameMethod[fullNameMethod.length - 1].equals(desiredMethod)) {
@@ -86,7 +85,7 @@ public class Application {
         System.out.println("Object created: " + object.toString() + "\n" + DELIMITER);
     }
 
-    private Object fieldValue(Class<?> type) throws IllegalArgumentException {
+    private Object fieldValue(final Class<?> type) throws IllegalArgumentException {
         Object result;
         try {
             if (type.equals(String.class)) {
@@ -108,8 +107,8 @@ public class Application {
         return result;
     }
 
-    private void initObject(String next) throws ClassNotFoundException, InstantiationException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
-        clazz = Class.forName(CLASS_PATH + "." + next);
+    private void initObject(final String next) throws ClassNotFoundException, InstantiationException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
+        Class<?> clazz = Class.forName(CLASS_PATH + "." + next);
         object = clazz.getDeclaredConstructor().newInstance();
         fields = clazz.getDeclaredFields();
         methods = clazz.getDeclaredMethods();
