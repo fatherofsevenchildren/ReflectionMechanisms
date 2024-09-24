@@ -2,7 +2,6 @@ package edu.school21;
 
 import edu.school21.annotation.processor.HtmlForm;
 import edu.school21.annotation.processor.HtmlInput;
-//import edu.school21.annotation.processor.HtmlInput;
 
 @HtmlForm(fileName = "user_form.html", action = "/users", method = "post")
 public class UserForm {
