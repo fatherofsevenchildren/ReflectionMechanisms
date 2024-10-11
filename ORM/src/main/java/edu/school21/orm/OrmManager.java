@@ -35,7 +35,7 @@ public class OrmManager {
     }
 
     public void init() throws SQLException {
-        Reflections reflections = new Reflections("edu.school21.models");
+        Reflections reflections = new Reflections(CLASS_PATH);
         Set<Class<?>> classes = reflections.getTypesAnnotatedWith(OrmEntity.class);
         for (Class<?> clazz : classes) {
             String tableName = clazz.getDeclaredAnnotation(OrmEntity.class).table();
