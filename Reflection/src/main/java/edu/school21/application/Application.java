@@ -1,21 +1,22 @@
 package edu.school21.application;
 
+import edu.school21.messages.Messages;
+import org.reflections.Reflections;
+import org.reflections.scanners.SubTypesScanner;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.InputMismatchException;
 import java.util.Scanner;
-import org.reflections.Reflections;
-import org.reflections.scanners.SubTypesScanner;
 
 
 public class Application {
 
-    static final String CLASS_PATH = "edu.school21.classes";
-    static final String DELIMITER = "-----------------\n";
+    private static final String CLASS_PATH = "edu.school21.classes";
 
-    private Object object;
     private final Scanner scanner = new Scanner(System.in);
+    private Object object;
     private Field[] fields;
     private Method[] methods;
 
@@ -29,37 +30,58 @@ public class Application {
             executeMethod();
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException
                  | NoSuchMethodException | InvocationTargetException e) {
-            System.out.println("error when you try:" + e.getMessage());
+            Messages.ERROR.print(e.getMessage());
         } catch (IllegalArgumentException e) {
             System.out.println(e.getMessage());
         }
     }
 
-    private void executeMethod() throws InvocationTargetException, IllegalAccessException {
-        System.out.println("Enter name of the method for call:");
-        Method method = findMethod(scanner.next());
-        method.setAccessible(true);
-        Object[] params = new Object[method.getParameterCount()];
-        Class<?>[] paramTypes = method.getParameterTypes();
-        for (int i = 0; i < method.getParameterCount(); i++) {
-            System.out.println("Enter " + paramTypes[i].getSimpleName() + " value:");
-            params[i] = fieldValue(paramTypes[i]);
-        }
-        System.out.println("Method returned:\n" + method.invoke(object, params).toString());
+    private void showClasses() {
+        Messages.CLASSES.print();
+        Reflections reflections = new Reflections(CLASS_PATH,
+                new SubTypesScanner(false));
+        reflections.getSubTypesOf(Object.class).forEach(aClass -> {
+            System.out.println(aClass.getSimpleName());
+        });
+        Messages.DELIMITER.print();
+        Messages.ENTER_CLASS_NAME.print();
     }
 
-    private Method findMethod(final String desiredMethod) {
+    private void initObject(final String text) throws ClassNotFoundException,
+            InstantiationException, IllegalAccessException,
+            NoSuchMethodException, InvocationTargetException {
+        Class<?> clazz = Class.forName(CLASS_PATH + "." + text);
+        object = clazz.getDeclaredConstructor().newInstance();
+        fields = clazz.getDeclaredFields();
+        methods = clazz.getDeclaredMethods();
+    }
+
+    void showData() throws IllegalAccessException {
+        Messages.FIELDS.print();
+        for (Field field : fields) {
+            Messages.LINE.print(field.getType().getSimpleName(), field.getName());
+        }
+        Messages.METHODS.print();
         for (Method method : methods) {
             String[] fullNameMethod = method.toString().split("\\.");
-            if (fullNameMethod[fullNameMethod.length - 1].equals(desiredMethod)) {
-                return method;
-            }
+            Messages.LINE.print(method.getReturnType().getSimpleName(),
+                    fullNameMethod[fullNameMethod.length - 1]);
         }
-        throw new IllegalArgumentException("method not found");
+        Messages.DELIMITER.print();
+    }
+
+    private void setFields() throws IllegalAccessException, InputMismatchException {
+        Messages.CREATE_OBJECT.print();
+        for (Field field : fields) {
+            System.out.println(field.getName());
+            field.setAccessible(true);
+            field.set(object, fieldValue(field.getType()));
+        }
+        Messages.OBJECT_CREATED.print(object.toString());
     }
 
     private void fieldChanging() throws IllegalAccessException {
-        System.out.println("Enter name of the field for changing:");
+        Messages.ENTER_FIELD_NAME.print();
         Field requiredField = null;
         String fieldName = scanner.next();
         for (Field field : fields) {
@@ -70,19 +92,32 @@ public class Application {
         if (requiredField == null) {
             throw new IllegalArgumentException("field not found");
         }
-        System.out.println("Enter " + requiredField.getType().getSimpleName() + " value:");
+        Messages.ENTER_VALUE.print(requiredField.getType().getSimpleName());
         requiredField.set(object, fieldValue(requiredField.getType()));
-        System.out.println("Object update: " + object.toString() + "\n" + DELIMITER);
+        Messages.OBJECT_UPDATED.print(object.toString());
     }
 
-    private void setFields() throws IllegalAccessException, InputMismatchException {
-        System.out.println("Let’s create an object.");
-        for (Field field : fields) {
-            System.out.println(field.getName());
-            field.setAccessible(true);
-            field.set(object, fieldValue(field.getType()));
+    private void executeMethod() throws InvocationTargetException, IllegalAccessException {
+        Messages.ENTER_METHOD_NAME.print();
+        Method method = findMethod(scanner.next());
+        method.setAccessible(true);
+        Object[] params = new Object[method.getParameterCount()];
+        Class<?>[] paramTypes = method.getParameterTypes();
+        for (int i = 0; i < method.getParameterCount(); i++) {
+            Messages.ENTER_VALUE.print(paramTypes[i].getSimpleName());
+            params[i] = fieldValue(paramTypes[i]);
         }
-        System.out.println("Object created: " + object.toString() + "\n" + DELIMITER);
+        Messages.METHOD_RETURNED.print(method.invoke(object, params).toString());
+    }
+
+    private Method findMethod(final String desiredMethod) {
+        for (Method method : methods) {
+            String[] fullNameMethod = method.toString().split("\\.");
+            if (fullNameMethod[fullNameMethod.length - 1].equals(desiredMethod)) {
+                return method;
+            }
+        }
+        throw new IllegalArgumentException("method not found");
     }
 
     private Object fieldValue(final Class<?> type) throws IllegalArgumentException {
@@ -105,35 +140,6 @@ public class Application {
             throw new IllegalArgumentException("wrong type");
         }
         return result;
-    }
-
-    private void initObject(final String next) throws ClassNotFoundException, InstantiationException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
-        Class<?> clazz = Class.forName(CLASS_PATH + "." + next);
-        object = clazz.getDeclaredConstructor().newInstance();
-        fields = clazz.getDeclaredFields();
-        methods = clazz.getDeclaredMethods();
-    }
-
-    void showClasses() {
-        System.out.println("Classes:");
-        Reflections reflections = new Reflections(CLASS_PATH, new SubTypesScanner(false));
-        reflections.getSubTypesOf(Object.class).forEach(aClass -> {
-            System.out.println(aClass.getSimpleName());
-        });
-        System.out.println(DELIMITER + "Enter class name:");
-    }
-
-    void showData() throws IllegalAccessException {
-        System.out.println("fields:");
-        for (Field field : fields) {
-            System.out.println("\t" + field.getType().getSimpleName() + " " + field.getName());
-        }
-        System.out.println("methods:");
-        for (Method method : methods) {
-            String[] fullNameMethod = method.toString().split("\\.");
-            System.out.println("\t" + method.getReturnType().getSimpleName() + " " + fullNameMethod[fullNameMethod.length - 1]);
-        }
-        System.out.println(DELIMITER);
     }
 
 }
